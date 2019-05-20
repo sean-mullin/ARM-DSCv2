@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "DomainName": {
+      "value": "stannum-man.org"
+    },
+    "AdminUserName": {
+      "value": "albadmin"
+    },
+    "AdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/374f3fee-98d2-4030-9ea1-bba783499a0c/resourceGroups/RG-ALB-DSC/providers/Microsoft.KeyVault/vaults/KVALBDSCEastUS2"
+        },
+        "secretName": "ALBAdmin"
+      }
+    },
+    "test": {
+      "value": "test"
+    }
+  }
+}

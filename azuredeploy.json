@@ -1,0 +1,312 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "DomainName": {
+      "type": "string",
+      "minLength": 5,
+      "defaultValue": "Contoso.com"
+    },
+    "AdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "AdminPassword": {
+      "type": "securestring"
+    },
+    "WindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "2016-Datacenter"
+      ]
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    },
+    "test": {
+      "type": "string",
+      "metadata": {
+        "description": "just for testing"
+      }
+    }
+  },
+  "variables": {
+    "albsemullinName": "[concat('albsemullin', uniqueString(resourceGroup().id))]",
+    "Lab-VNetPrefix": "10.0.0.0/16",
+    "Lab-VNetSubnet1Name": "Subnet-1",
+    "Lab-VNetSubnet1Prefix": "10.0.0.0/24",
+    "ImagePublisher": "MicrosoftWindowsServer",
+    "ImageOffer": "WindowsServer",
+    "VnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'Lab-VNet')]",
+    "SubnetRef": "[concat(variables('VnetID'), '/subnets/', variables('Lab-VNetSubnet1Name'))]",
+    "DSCArchiveFolder": "DSC",
+    "DSCArchiveFileName": "Lab-DSC.zip",
+    "fixeddomainname": "[replace(parameters('DomainName'), '.','')]",
+    "Servers": [
+      {
+        "VMName": "ALB-DC",
+        "VMSize": "Standard_D2_v2",
+        "Subnet": "Subnet-1",
+        "StorageType": "Standard_LRS",
+        "privateIPAddress": "10.0.0.4",
+        "dscConfigData": "Lab-DCconfig.psd1"
+      },
+      {
+        "VMName": "ALB-ADFS",
+        "VMSize": "Standard_D2_v2",
+        "Subnet": "Subnet-1",
+        "StorageType": "Standard_LRS",
+        "privateIPAddress": "10.0.0.5",
+        "dscConfigData": "Lab-ADFSconfig.psd1"
+      },
+      {
+        "VMName": "ALB-AADC",
+        "VMSize": "Standard_D2_v2",
+        "Subnet": "Subnet-1",
+        "StorageType": "Standard_LRS",
+        "privateIPAddress": "10.0.0.6",
+        "dscConfigData": "Lab-AADCconfig.psd1"
+      },
+      {
+        "VMName": "ALB-WAP",
+        "VMSize": "Standard_D2_v2",
+        "Subnet": "Subnet-1",
+        "StorageType": "Standard_LRS",
+        "privateIPAddress": "10.0.0.7",
+        "dscConfigData": "Lab-WAPconfig.psd1"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "name": "[variables('albsemullinName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('storageType')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "albsemullin"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "Lab-VNet",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-01-01",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "Lab-VNet"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('Lab-VNetPrefix')]"
+          ]
+        },
+        "dhcpOptions": {
+          "dnsServers": [
+            "10.0.0.4",
+            "168.63.129.16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('Lab-VNetSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('Lab-VNetSubnet1Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "name": "[concat('NIC_',variables('Servers')[copyIndex(0)].VMName)]",
+      "copy": {
+        "name": "nicLoop",
+        "count": "[length(variables('Servers'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'Lab-VNet')]",
+        "pipLoop"
+      ],
+      "tags": {
+        "displayName": "Lab-Nic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[variables('Servers')[copyIndex(0)].privateIPAddress]",
+              "subnet": {
+                "id": "[variables('SubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('Servers')[copyIndex(0)].VMName, '-PIP'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-06-01",
+      "name": "[concat('vm-', variables('Servers')[copyIndex(0)].VMName)]",
+      "copy": {
+        "name": "vmLoop",
+        "count": "[length(variables('Servers'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('albsemullinName'))]",
+        "nicloop"
+      ],
+      "tags": {
+        "displayName": "Lab-VM"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('Servers')[copyIndex(0)].VMSize]"
+        },
+        "osProfile": {
+          "computerName": "[variables('Servers')[copyIndex(0)].VMName]",
+          "adminUsername": "[parameters('AdminUsername')]",
+          "adminPassword": "[parameters('AdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('ImagePublisher')]",
+            "offer": "[variables('ImageOffer')]",
+            "sku": "[parameters('WindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat('vm-', variables('Servers')[copyIndex(0)].VMName, '-OSDisk')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "[parameters('storageType')]"
+            }
+          },
+          "dataDisks": [
+            {
+              "caching": "None",
+              "createOption": "Empty",
+              "lun": 0,
+              "managedDisk": {
+                "storageAccountType": "[parameters('storageType')]"
+              },
+              "name": "[concat('vm-', variables('Servers')[copyIndex(0)].VMname,'Data-Disk1')]",
+              "diskSizeGB": 128
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('NIC_',variables('Servers')[copyIndex(0)].VMName))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "name": "Microsoft.Powershell.DSC",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', concat('vm-', variables('Servers')[copyIndex(0)].VMName))]"
+          ],
+          "tags": {
+            "displayName": "DSC"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.9",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "configuration": {
+                "url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'))]",
+                "script": "Lab-DSC.ps1",
+                "function": "Main"
+              },
+              "configurationArguments": {
+                "DomainName": "[parameters('DomainName')]"
+              },
+              "configurationData": {
+              "url": "[concat(parameters('_artifactsLocation'),'/CD/',variables('Servers')[copyIndex(0)].dscConfigData)]"
+              }
+            },
+            "protectedSettings": {
+
+              "configurationArguments": {
+                "AdminCreds": {
+                  "UserName": "[parameters('AdminUserName')]",
+                  "Password": "[parameters('AdminPassword')]"
+                }
+              },
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
+              "configurationDataUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-08-01",
+      "name": "[concat(variables('Servers')[copyIndex(0)].VMName, '-PIP')]",
+      "copy": {
+        "name": "pipLoop",
+        "count": "[length(variables('Servers'))]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "Lab-PIPs"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[tolower(concat (variables('fixeddomainname'), '-', variables('Servers')[copyIndex(0)].VMName))]"
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
