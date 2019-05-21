@@ -50,9 +50,8 @@
     <Content Include="DSC\Lab-DSC.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="PreReqs\" />
+    <None Include="PreReqs\get-dscmodules.ps1" />
+    <None Include="PreReqs\RGandKeyVault.ps1" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>

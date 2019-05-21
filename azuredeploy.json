@@ -73,7 +73,19 @@
         "Subnet": "Subnet-1",
         "StorageType": "Standard_LRS",
         "privateIPAddress": "10.0.0.4",
-        "dscConfigData": "Lab-DCconfig.psd1"
+        "dscConfigData": "Lab-DCconfig.psd1",
+        "dataDisks": [
+          {
+            "caching": "None",
+            "createOption": "Empty",
+            "lun": 0,
+            "managedDisk": {
+              "storageAccountType": "[parameters('storageType')]"
+            },
+            "name": "vm-ALB-DC-Data-Disk1",
+            "diskSizeGB": 128
+          }
+        ]
       },
       {
         "VMName": "ALB-ADFS",
@@ -221,18 +233,19 @@
               "storageAccountType": "[parameters('storageType')]"
             }
           },
-          "dataDisks": [
-            {
-              "caching": "None",
-              "createOption": "Empty",
-              "lun": 0,
-              "managedDisk": {
-                "storageAccountType": "[parameters('storageType')]"
-              },
-              "name": "[concat('vm-', variables('Servers')[copyIndex(0)].VMname,'Data-Disk1')]",
-              "diskSizeGB": 128
-            }
-          ]
+          "dataDisks": "[if(contains(variables('Servers')[copyIndex(0)],'dataDisks'),array(variables('Servers')[copyIndex(0)].dataDisks),json('null'))]"
+          //"dataDisks": [
+          //  {
+          //    "caching": "None",
+          //    "createOption": "Empty",
+          //    "lun": 0,
+          //    "managedDisk": {
+          //      "storageAccountType": "[parameters('storageType')]"
+          //    },
+          //    "name": "[concat('vm-', variables('Servers')[copyIndex(0)].VMname,'Data-Disk1')]",
+          //    "diskSizeGB": 128
+          //  }
+          //]
         },
         "networkProfile": {
           "networkInterfaces": [
