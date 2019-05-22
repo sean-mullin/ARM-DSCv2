@@ -11,7 +11,7 @@
     "AdminPassword": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/374f3fee-98d2-4030-9ea1-bba783499a0c/resourceGroups/RG-ALB-DSC/providers/Microsoft.KeyVault/vaults/KVALBDSCEastUS2"
+          "id": "/subscriptions/07086a78-87ca-42f3-a311-2af8f1698c66/resourceGroups/RG-ALB-DSC/providers/Microsoft.KeyVault/vaults/KVALBDSCUSGovVirginia"
         },
         "secretName": "ALBAdmin"
       }

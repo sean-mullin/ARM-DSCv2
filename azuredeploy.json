@@ -270,7 +270,7 @@
                 "DomainName": "[parameters('DomainName')]"
               },
               "configurationData": {
-              "url": "[concat(parameters('_artifactsLocation'),'/CD/',variables('Servers')[copyIndex(0)].dscConfigData)]"
+                "url": "[concat(parameters('_artifactsLocation'),'/CD/',variables('Servers')[copyIndex(0)].dscConfigData)]"
               }
             },
             "protectedSettings": {
