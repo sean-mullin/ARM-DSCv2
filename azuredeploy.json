@@ -234,18 +234,6 @@
             }
           },
           "dataDisks": "[if(contains(variables('Servers')[copyIndex(0)],'dataDisks'),array(variables('Servers')[copyIndex(0)].dataDisks),json('null'))]"
-          //"dataDisks": [
-          //  {
-          //    "caching": "None",
-          //    "createOption": "Empty",
-          //    "lun": 0,
-          //    "managedDisk": {
-          //      "storageAccountType": "[parameters('storageType')]"
-          //    },
-          //    "name": "[concat('vm-', variables('Servers')[copyIndex(0)].VMname,'Data-Disk1')]",
-          //    "diskSizeGB": 128
-          //  }
-          //]
         },
         "networkProfile": {
           "networkInterfaces": [
