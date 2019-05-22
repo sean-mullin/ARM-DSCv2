@@ -1,13 +1,13 @@
 #
 # RGandKeyValut.ps1
 #
-$rgName = 'RG-ALB-DSC'
+$rgName = 'ARM-DSCv2'
 
-$kVaultName = 'KVALBDSCEastUS2'
+$kVaultName = 'KVALBDSCusgovvirginia' #change for environment ie commercial or mag
 
-$location = 'EastUS2'
+$location = 'usgovvirginia' # change for environment, ensure the proper location for environment is here
 
-$AdminUserName = 'ALBAdmin'
+$AdminUserName = 'Admin'
 
 
 
@@ -17,7 +17,7 @@ Get-AzureRmResourceGroup -Name $rgName -Location $Location
 
 
 
-New-AzureRmKeyVault -ResourceGroupName $rgName -VaultName $kVaultName -Location eastus -Sku premium -EnabledForTemplateDeployment
+New-AzureRmKeyVault -ResourceGroupName $rgName -VaultName $kVaultName -Location $location -Sku premium -EnabledForTemplateDeployment
 
 #Get-AzureRmKeyVault -VaultName contoso -ResourceGroupName rgglobal | Remove-AzureRmKeyVault
 
@@ -75,7 +75,7 @@ $ALBDSC | select *
 #
 #$rgName = 'rgGlobal'
 #
-#$saname = 'saeastus2'
+#$saname = 'sausgovvirginia'
 #
 #$SS = (Get-AzureRmStorageAccountKey -ResourceGroupName $rgName -Name $saname)[1].value | ConvertTo-SecureString -AsPlainText -Force
 #

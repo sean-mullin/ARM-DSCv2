@@ -46,16 +46,10 @@
       "metadata": {
         "description": "Auto-generated token to access _artifactsLocation"
       }
-    },
-    "test": {
-      "type": "string",
-      "metadata": {
-        "description": "just for testing"
-      }
     }
   },
   "variables": {
-    "albsemullinName": "[concat('albsemullin', uniqueString(resourceGroup().id))]",
+    "saName": "[concat('sa', uniqueString(resourceGroup().id))]",
     "Lab-VNetPrefix": "10.0.0.0/16",
     "Lab-VNetSubnet1Name": "Subnet-1",
     "Lab-VNetSubnet1Prefix": "10.0.0.0/24",
@@ -115,7 +109,7 @@
   },
   "resources": [
     {
-      "name": "[variables('albsemullinName')]",
+      "name": "[variables('saName')]",
       "type": "Microsoft.Storage/storageAccounts",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-01-01",
@@ -124,7 +118,7 @@
       },
       "dependsOn": [],
       "tags": {
-        "displayName": "albsemullin"
+        "displayName": "storageaccount"
       },
       "kind": "Storage"
     },
@@ -203,7 +197,7 @@
         "count": "[length(variables('Servers'))]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('albsemullinName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('saName'))]",
         "nicloop"
       ],
       "tags": {
@@ -234,6 +228,7 @@
             }
           },
           "dataDisks": "[if(contains(variables('Servers')[copyIndex(0)],'dataDisks'),array(variables('Servers')[copyIndex(0)].dataDisks),json('null'))]"
+          //variables('mydisks')['128gb']
         },
         "networkProfile": {
           "networkInterfaces": [
@@ -304,7 +299,7 @@
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
-          "domainNameLabel": "[tolower(concat (variables('fixeddomainname'), '-', variables('Servers')[copyIndex(0)].VMName))]"
+          "domainNameLabel": "[tolower(concat(variables('fixeddomainname'), '-', variables('Servers')[copyIndex(0)].VMName))]"
         }
       }
     }

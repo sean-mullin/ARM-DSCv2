@@ -6,18 +6,15 @@
       "value": "stannum-man.org"
     },
     "AdminUserName": {
-      "value": "albadmin"
+      "value": "admin"
     },
     "AdminPassword": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/07086a78-87ca-42f3-a311-2af8f1698c66/resourceGroups/RG-ALB-DSC/providers/Microsoft.KeyVault/vaults/KVALBDSCUSGovVirginia"
+          "id": "/subscriptions/07086a78-87ca-42f3-a311-2af8f1698c66/resourceGroups/ARM-DSCv2/providers/Microsoft.KeyVault/vaults/KVALBDSCUSGovVirginia"
         },
-        "secretName": "ALBAdmin"
+        "secretName": "Admin"
       }
-    },
-    "test": {
-      "value": "test"
     }
   }
 }
