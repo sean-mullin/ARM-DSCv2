@@ -248,7 +248,7 @@
           "name": "Microsoft.Powershell.DSC",
           "type": "extensions",
           "location": "[resourceGroup().location]",
-          "apiVersion": "2016-03-30",
+          "apiVersion": "2018-06-01",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', concat('vm-', variables('Servers')[copyIndex(0)].VMName))]"
           ],
